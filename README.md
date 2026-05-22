@@ -7,9 +7,11 @@ A Python script that adds a Scratch project to multiple studios from a list. Bui
 ## Features
 
 - Adds one project to dozens of studios automatically
-- Smart delay system respects Scratch's rate limits without unnecessary waits
+- Randomized delays prevent rate limiting
 - Detects and skips duplicate studios
-- Stops immediately on rate limits or authentication errors
+- Graceful shutdown on Ctrl+C — saves progress before exiting
+- Automatically resumes from where it left off using the previous report
+- Stops immediately on authentication errors
 - Generates a detailed report of successes and failures
 - Progress bar with real-time elapsed time
 
@@ -54,7 +56,20 @@ A Python script that adds a Scratch project to multiple studios from a list. Bui
 
 ## How it works
 
-For each studio, the script connects and adds your project. A minimum 200ms spacing is maintained between requests (half of Scratch's 10/s limit), and if a request takes longer no extra wait is added. Results are saved to `report.txt`.
+For each studio, the script connects and adds your project with randomized 1-4 second delays between requests. Every 10 studios, a 10-second batch pause gives the API extra breathing room. If interrupted, press Ctrl+C to save progress and resume later — the script reads `report.txt` and continues from where it stopped. Results are saved to `report.txt`.
+
+## ⚠️ Known issue: Undocumented rate limit around 300 requests
+
+Testing has revealed a consistent pattern: **429 Rate Limit errors appear around studio #301**, regardless of request spacing. This strongly suggests Scratch applies an **undocumented limit of approximately 300 write operations per session** to the studio add endpoint — far stricter than the official 10 requests/second REST API cap.
+
+> **This limit is not documented anywhere by Scratch.** It was discovered through repeated testing with this tool.
+
+**Workarounds:**
+- The script now auto-resumes — when rate limited, wait 15-30 minutes and run again
+- Process studios in smaller sessions (200-250 at a time)
+- If investigating further, check for `X-RateLimit-*` headers in responses
+
+**Contributions and insights on this issue are highly welcome.**
 
 ## License
 
