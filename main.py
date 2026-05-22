@@ -20,7 +20,13 @@ USERNAME = os.environ.get("SCRATCH_USERNAME")
 PROJECT_ID = int(os.environ.get("SCRATCH_PROJECT_ID", 0))
 STUDIOS_FILE = os.environ.get("STUDIOS_FILE", "studios_to_add.txt")
 REPORT_FILE = "report.txt"
-MIN_DELAY = 0.2
+MIN_INTERVAL = 0.2
+
+def rate_limit_protected_request(last_request_time):
+    elapsed = time.time() - last_request_time
+    if elapsed < MIN_INTERVAL:
+        time.sleep(MIN_INTERVAL - elapsed)
+    return time.time()
 
 if not all([SESSION_ID, USERNAME, PROJECT_ID]):
     raise ValueError(
@@ -55,7 +61,7 @@ if not studio_urls_by_id:
 
 studio_ids = list(studio_urls_by_id.keys())
 total = len(studio_ids)
-estimated_time = total * (MIN_DELAY * 2)
+estimated_time = total * MIN_INTERVAL * 2
 start_time = time.time()
 aborted = False
 
@@ -74,6 +80,7 @@ print(f"Minimum estimated time: {estimated_time:.1f}s ({estimated_time/60:.1f} m
 success_list = []
 fail_list = []
 pending_ids = []
+last_request_time = time.time()
 
 for i, studio_id in enumerate(studio_ids, 1):
     bar_length = 30
@@ -84,19 +91,11 @@ for i, studio_id in enumerate(studio_ids, 1):
     print(progress, end="", flush=True)
 
     try:
-        t0 = time.time()
+        last_request_time = rate_limit_protected_request(last_request_time)
         studio = session.connect_studio(studio_id)
-        t1 = time.time()
-        connect_time = t1 - t0
-        if connect_time < MIN_DELAY:
-            time.sleep(MIN_DELAY - connect_time)
         
-        t0 = time.time()
+        last_request_time = rate_limit_protected_request(last_request_time)
         studio.add_project(PROJECT_ID)
-        t1 = time.time()
-        add_time = t1 - t0
-        if add_time < MIN_DELAY and i < total:
-            time.sleep(MIN_DELAY - add_time)
         
         success_list.append(studio_id)
     except (RateLimitedError, Response429) as e:
