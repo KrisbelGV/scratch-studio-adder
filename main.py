@@ -83,20 +83,39 @@ def load_previous_progress():
         return set()
     
     processed = set()
-    current_project_found = False
+    found_project = False
+    in_section = False
     
     with open(REPORT_FILE, "r", encoding="utf-8") as f:
         for line in f:
-            if f"Project ID: {PROJECT_ID}" in line:
-                current_project_found = True
-            if current_project_found and "--- Successfully added" in line:
-                break
-            if current_project_found and "https://scratch.mit.edu/studios/" in line:
+            line = line.strip()
+            
+            if line.startswith("Project ID:"):
+                try:
+                    report_project_id = int(line.split(":")[1].strip())
+                    if report_project_id == PROJECT_ID:
+                        found_project = True
+                except:
+                    pass
+                continue
+            
+            if not found_project:
+                continue
+            
+            if line.startswith("--- Successfully added to") or line.startswith("--- Failed to add to"):
+                in_section = True
+                continue
+            
+            if line.startswith("---") or line.startswith("==="):
+                in_section = False
+                continue
+            
+            if in_section and "studios/" in line:
                 match = re.search(r"studios/(\d+)", line)
                 if match:
                     processed.add(int(match.group(1)))
     
-    return processed if current_project_found else set()
+    return processed
 
 def rate_limit_protected_request(last_request_time):
     base_delay = 1 + 3 * (random.random() ** 2)
