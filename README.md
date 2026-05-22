@@ -46,7 +46,7 @@ A Python script that adds a Scratch project to multiple studios from a list. Bui
        https://scratch.mit.edu/studios/11111111/
        https://scratch.mit.edu/studios/22222222/
 
-   You can download a ready-made list from the studios featured in [this project](https://scratch.mit.edu/projects/1318691000/).
+   You can use the included `open_studios.txt` as a starting point. For the most up-to-date list, download it from the studios featured in [this project](https://scratch.mit.edu/projects/1318691000/).
 
 5. Run the script:
 
