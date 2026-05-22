@@ -71,6 +71,18 @@ Testing has revealed a consistent pattern: **429 Rate Limit errors appear around
 
 **Contributions and insights on this issue are highly welcome.**
 
+## Known issue: Rate limiting on large studio lists
+
+When adding a project to a large number of studios (100+), you may encounter `429 Rate Limit` errors even though the tool stays within 5 requests/second. This suggests Scratch applies additional limits — possibly per-minute or per-endpoint — beyond the documented 10 req/s REST API cap.
+
+A more robust solution is under development. In the meantime:
+
+- Try processing studios in smaller batches (e.g., 40–50 at a time)
+- Wait a few minutes between batches
+- If you hit a rate limit, stop and wait before resuming
+
+Contributions and insights on this issue are welcome.
+
 ## License
 
 This project is licensed under the **MIT License** — feel free to use, modify, and share it.
